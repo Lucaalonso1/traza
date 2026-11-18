@@ -7,6 +7,8 @@ import { CATALOG, LEVELS, STYLES } from "@/lib/catalog";
 import { recommendedLength } from "@/lib/engine";
 import { useAuth } from "@/lib/auth";
 import { NIEVE } from "@/lib/format";
+import { skiImage } from "@/lib/ski-images";
+import ThinkingOrb from "./ui/thinking-orb";
 
 const STEPS = ["Tu físico", "Tu nivel", "Tu estilo", "Detalles"];
 const EXAMPLES = [
@@ -15,12 +17,7 @@ const EXAMPLES = [
   "Busco algo fácil para mi primera temporada completa",
   "Me gusta ir rápido y hacer giros largos",
 ];
-const LOADING_LINES = [
-  "Leyendo tu perfil…",
-  `Comparando ${CATALOG.length} modelos de referencia…`,
-  "Ajustando longitudes a tu altura y peso…",
-  "Escribiendo por qué te encaja cada uno…",
-];
+const LOADING_LINES = ["Leyendo tu perfil", `Comparando ${CATALOG.length} modelos`, "Preguntando a la comunidad", "Ajustando longitudes", "Eligiendo tus esquís"];
 const LAST = "altura.lastResult";
 
 const slide = {
@@ -38,6 +35,7 @@ export default function Recommender() {
   const [profile, setProfile] = useState({ height: 175, weight: 72, level: null, style: initialStyle, notes: "" });
   const [phase, setPhase] = useState("form"); // form | loading | results
   const [result, setResult] = useState(null);
+  const [pending, setPending] = useState(null); // resultado listo mientras el orbe termina
   const [error, setError] = useState("");
   const topRef = useRef(null);
 
@@ -77,6 +75,7 @@ export default function Recommender() {
   };
 
   async function submit() {
+    setPending(null);
     setPhase("loading");
     setError("");
     topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -89,17 +88,22 @@ export default function Recommender() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "No he podido generar recomendaciones.");
-      const wait = Math.max(0, 2600 - (Date.now() - started)); // deja ver la animación
+      const wait = Math.max(0, 3400 - (Date.now() - started)); // deja pensar al orbe
       await new Promise((r) => setTimeout(r, wait));
-      setResult(data);
-      setPhase("results");
-      try {
-        sessionStorage.setItem(LAST, JSON.stringify({ profile, result: data }));
-      } catch {}
+      setPending(data);
     } catch (e) {
       setError(e.message || "Algo ha fallado. Vuelve a intentarlo.");
       setPhase("form");
     }
+  }
+
+  function reveal() {
+    setResult(pending);
+    setPending(null);
+    setPhase("results");
+    try {
+      sessionStorage.setItem(LAST, JSON.stringify({ profile, result: pending }));
+    } catch {}
   }
 
   function editProfile() {
@@ -184,7 +188,7 @@ export default function Recommender() {
           </motion.div>
         )}
 
-        {phase === "loading" && <Loading key="loading" profile={profile} />}
+        {phase === "loading" && <Loading key="loading" profile={profile} done={!!pending} onComplete={reveal} />}
 
         {phase === "results" && result && (
           <Results key="results" result={result} profile={profile} onEdit={editProfile} onRetry={submit} />
@@ -352,26 +356,15 @@ function NotesStep({ profile, set }) {
   );
 }
 
-function Loading({ profile }) {
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setI((n) => Math.min(n + 1, LOADING_LINES.length - 1)), 900);
-    return () => clearInterval(t);
-  }, []);
+function Loading({ profile, done, onComplete }) {
   return (
-    <motion.div className="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} role="status" aria-live="polite">
-      <div className="loading-orb" aria-hidden="true" />
-      <div className="loading-track" aria-hidden="true">
-        <span />
-      </div>
-      <AnimatePresence mode="wait">
-        <motion.p key={i} className="loading-line" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
-          {LOADING_LINES[i]}
-        </motion.p>
-      </AnimatePresence>
-      <p className="muted small">
-        {profile.height} cm · {profile.weight} kg · {LEVELS[profile.level]?.label} · {STYLES[profile.style]?.label}
-      </p>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.2 } }}>
+      <ThinkingOrb
+        labels={LOADING_LINES}
+        done={done}
+        onComplete={onComplete}
+        detail={`${profile.height} cm · ${profile.weight} kg · ${LEVELS[profile.level]?.label} · ${STYLES[profile.style]?.label}`}
+      />
     </motion.div>
   );
 }
@@ -426,15 +419,28 @@ function Results({ result, profile, onEdit, onRetry }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.12 * i, duration: 0.6, ease: [0.2, 0.7, 0.2, 1] }}
             >
-              <div className="ski-rank" aria-hidden="true">
-                {i + 1}
+              <div className="ski-visual">
+                <span className="ski-rank" aria-hidden="true">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                {skiImage(s.marca, s.modelo) ? (
+                  <motion.img
+                    src={skiImage(s.marca, s.modelo)}
+                    alt={`${s.marca} ${s.modelo}`}
+                    className="ski-img"
+                    initial={{ opacity: 0, x: 80, rotate: 2, filter: "blur(8px)" }}
+                    animate={{ opacity: 1, x: 0, rotate: 0, filter: "blur(0px)" }}
+                    transition={{ delay: 0.15 + 0.12 * i, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                  />
+                ) : (
+                  <span className="ski-img-fallback" aria-hidden="true" />
+                )}
+                <span className="ski-cat">{s.categoria}</span>
               </div>
               <div className="ski-main">
                 <p className="ski-brand">{s.marca}</p>
                 <h2 className="ski-model">{s.modelo}</h2>
-                <p className="ski-meta">
-                  {s.categoria} · {s.nivel}
-                </p>
+                <p className="ski-meta">{s.nivel}</p>
                 <p className="ski-why">{s.porQue}</p>
                 <ul className="ski-tags">
                   {s.puntosFuertes.map((p) => (

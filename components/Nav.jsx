@@ -7,12 +7,13 @@ import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
 import Icon from "./Icon";
 import Avatar from "./social/Avatar";
+import { NavBar, TabBar } from "./ui/tubelight-navbar";
 
 const LINKS = [
-  ["/explorar", "Explorar", "compass"],
-  ["/mapa", "Mapa", "map"],
-  ["/estaciones", "Estaciones", "mountain"],
-  ["/recomendador", "Elige tu esquí", "ski"],
+  { name: "Explorar", url: "/explorar", icon: "compass" },
+  { name: "Mapa", url: "/mapa", icon: "map" },
+  { name: "Estaciones", url: "/estaciones", icon: "mountain" },
+  { name: "Elige tu esquí", url: "/recomendador", icon: "ski" },
 ];
 
 export default function Nav() {
@@ -43,13 +44,7 @@ export default function Nav() {
           <Link href="/" className="brand" aria-label="Traza, inicio">
             <Logo size={28} />
           </Link>
-          <div className="nav-links">
-            {LINKS.map(([href, label]) => (
-              <Link key={href} href={href} className="nav-link" aria-current={active(href) ? "page" : undefined}>
-                {label}
-              </Link>
-            ))}
-          </div>
+          <NavBar items={LINKS} isActive={active} className="nav-links" />
           <div className="nav-end">
             <ThemeToggle />
             {user && (
@@ -99,20 +94,16 @@ export default function Nav() {
       </header>
 
       {/* Barra inferior en móvil */}
-      <nav className="tabbar" aria-label="Secciones">
-        {[
-          ["/explorar", "Explorar", "compass"],
-          ["/mapa", "Mapa", "map"],
-          ["/publicar", "Publicar", "plus"],
-          ["/estaciones", "Estaciones", "mountain"],
-          [user ? `/u/${user.username}` : "/acceso", user ? "Perfil" : "Entrar", "user"],
-        ].map(([href, label, icon]) => (
-          <Link key={label} href={href} className={`tab ${icon === "plus" ? "tab-main" : ""}`} aria-current={active(href) ? "page" : undefined}>
-            <Icon name={icon} size={22} />
-            <span>{label}</span>
-          </Link>
-        ))}
-      </nav>
+      <TabBar
+        isActive={active}
+        items={[
+          { name: "Explorar", url: "/explorar", icon: "compass" },
+          { name: "Mapa", url: "/mapa", icon: "map" },
+          { name: "Publicar", url: "/publicar", icon: "plus", main: true },
+          { name: "Estaciones", url: "/estaciones", icon: "mountain" },
+          { name: user ? "Perfil" : "Entrar", url: user ? `/u/${user.username}` : "/acceso", icon: "user" },
+        ]}
+      />
     </>
   );
 }

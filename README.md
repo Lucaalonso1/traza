@@ -131,4 +131,4 @@ docs/           imagen de marca y capturas del README
 
 ## Créditos
 
-Mapas: imágenes de satélite © Esri, Maxar, Earthstar Geographics · © OpenStreetMap · OpenTopoMap (CC-BY-SA). Foto del hero reescalada con [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN).
+Mapas: imágenes de satélite © Esri, Maxar, Earthstar Geographics · © OpenStreetMap · OpenTopoMap (CC-BY-SA). Foto del hero reescalada con [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN). Las imágenes de los esquís son fotos de producto de cada fabricante (vía las fichas de [SkiEssentials](https://www.skiessentials.com)), recortadas con Vision de macOS (`scripts/ski-images`); las marcas y las imágenes pertenecen a sus propietarios.

@@ -9,3 +9,4 @@ uploads/
 .claude/
 public/vendor/
 *.log
+scripts/ski-images/cutout

@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useAuth } from "@/lib/auth";
 import { LEVELS, STYLES } from "@/lib/catalog";
+import { skiImage } from "@/lib/ski-images";
 
 export default function Garage() {
   const { user, ready, garage, removeSki, restoreSki, updateNote } = useAuth();
@@ -84,6 +85,11 @@ export default function Garage() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.94 }}
                 >
+                  {skiImage(s.marca, s.modelo) && (
+                    <div className="garage-visual">
+                      <img src={skiImage(s.marca, s.modelo)} alt="" loading="lazy" />
+                    </div>
+                  )}
                   <div className="garage-top">
                     <div>
                       <p className="ski-brand">{s.marca}</p>
