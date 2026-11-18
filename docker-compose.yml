@@ -1,0 +1,29 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: traza-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: traza
+      MYSQL_USER: traza
+      MYSQL_PASSWORD: traza_dev
+      MYSQL_ROOT_PASSWORD: traza_root_dev
+    ports:
+      - "3307:3306"
+    volumes:
+      - traza-data:/var/lib/mysql
+
+  # Visor web de la base de datos: http://localhost:8080
+  adminer:
+    image: adminer:5
+    container_name: traza-adminer
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+    ports:
+      - "8080:8080"
+
+volumes:
+  traza-data:

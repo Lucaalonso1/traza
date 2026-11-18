@@ -1,0 +1,11 @@
+node_modules
+.next
+.env
+.env.local
+uploads/
+.next-build
+*.mov
+.DS_Store
+.claude/
+public/vendor/
+*.log
