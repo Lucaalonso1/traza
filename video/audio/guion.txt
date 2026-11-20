@@ -1,0 +1,9 @@
+01|Cada estación guarda líneas que solo conocen quienes la esquían.
+02|Esto es Traza.
+03|La comunidad donde los esquiadores comparten su traza.
+04|Clips, fotos e informes de nieve, de quien estuvo allí esta misma mañana.
+05|Cada spot y cada ruta fuera de pista, en el mapa.
+06|Con la nieve de hoy, contada de primera mano.
+07|Y cuando busques esquís nuevos, nuestra inteligencia artificial elige los tuyos entre veintisiete modelos.
+08|Desde Baqueira, hasta Chamonix.
+09|Traza: tu próxima línea empieza aquí.

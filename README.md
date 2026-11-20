@@ -13,6 +13,10 @@ Red social para esquiadores: spots y rutas fuera de pista sobre un mapa, clips y
   <img src="docs/capturas/inicio.jpg" alt="Portada de Traza" width="49%">
 </p>
 
+## Vídeo promocional
+
+[`video/traza-promo.mp4`](video/traza-promo.mp4) (40 s, 1080p, con locución y música). Es una composición HTML animada fotograma a fotograma (`video/promo.html`) y renderizada con Chrome y ffmpeg: `cd video && npm install && npm run render`. La música y los efectos se sintetizan en `video/audio/mix.py`.
+
 ## Capturas
 
 | Feed | Mapa de spots y rutas |

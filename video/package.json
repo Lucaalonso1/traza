@@ -1,0 +1,12 @@
+{
+  "name": "traza-promo",
+  "private": true,
+  "type": "module",
+  "description": "Vídeo promocional de Traza: composición HTML animada por línea de tiempo y renderizada a MP4",
+  "scripts": {
+    "render": "node render.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^24.0.0"
+  }
+}

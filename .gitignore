@@ -10,3 +10,6 @@ uploads/
 public/vendor/
 *.log
 scripts/ski-images/cutout
+video/node_modules/
+video/frames/
+video/audio/mix.wav

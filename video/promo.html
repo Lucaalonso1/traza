@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Traza — vídeo promocional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Inter+Tight:wght@800;900&display=block" rel="stylesheet" />
+<style>
+  /* Mismos tokens que la web (app/globals.css) */
+  :root {
+    --bg: #080706; --text: #f2f5f7; --text-2: rgba(242,245,247,.66); --text-3: rgba(242,245,247,.48);
+    --hair: rgba(255,255,255,.08); --hair-2: rgba(255,255,255,.14);
+    --accent: #f2774a; --accent-2: #ff8b5c; --accent-ink: #1c0b03;
+    --glass-bg: linear-gradient(145deg, rgba(255,244,236,.10) 0%, rgba(255,244,236,.035) 48%, rgba(255,244,236,.06) 100%);
+    --glass-edge: inset 0 1px 0 rgba(255,255,255,.24), inset 0 -1px 0 rgba(255,255,255,.05), inset 0 0 0 1px rgba(255,255,255,.08);
+    --glass-drop: 0 1px 2px rgba(0,0,0,.25), 0 30px 80px -24px rgba(0,0,0,.7);
+    --sans: "Geist", -apple-system, sans-serif; --mono: "Geist Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+  body { font-family: var(--sans); color: var(--text); -webkit-font-smoothing: antialiased; letter-spacing: -0.01em; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); isolation: isolate; }
+  #cam { position: absolute; inset: 0; transform-origin: 50% 50%; }
+  .layer { position: absolute; inset: 0; }
+  .glass { background: var(--glass-bg); backdrop-filter: blur(30px) saturate(175%); -webkit-backdrop-filter: blur(30px) saturate(175%); box-shadow: var(--glass-edge), var(--glass-drop); }
+  .mono { font-family: var(--mono); letter-spacing: .14em; text-transform: uppercase; font-size: 18px; color: var(--text-3); }
+  .accent { color: var(--accent-2); }
+  .mask { display: inline-block; overflow: hidden; vertical-align: top; padding: .06em .08em .14em 0; margin: -.06em 0 -.14em; }
+  .mask.lt { padding: 0 0 .16em; margin: 0 0 -.16em; }
+  .w { display: inline-block; }
+  /* barrido de luz sobre el texto, como un «shine» de After Effects */
+  .shine { background: linear-gradient(100deg, currentColor 0%, currentColor 40%, #fff6ef 50%, currentColor 60%, currentColor 100%); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+  #glow { background: radial-gradient(45% 55% at var(--gx, 70%) var(--gy, 20%), rgba(242,119,74,.22), transparent 70%), radial-gradient(40% 50% at 15% 95%, rgba(242,119,74,.08), transparent 70%); }
+  #fx { z-index: 40; pointer-events: none; }
+  #leak { z-index: 41; mix-blend-mode: screen; pointer-events: none; }
+  #leak i { position: absolute; border-radius: 50%; filter: blur(90px); }
+  #flash { z-index: 42; background: radial-gradient(60% 60% at 50% 50%, #fff3ea, rgba(255,160,110,.4) 50%, transparent 80%); mix-blend-mode: screen; opacity: 0; }
+  #swoosh { z-index: 43; pointer-events: none; overflow: visible; }
+  #grain { opacity: .07; mix-blend-mode: overlay; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); z-index: 50; pointer-events: none; }
+  #vignette { z-index: 49; background: radial-gradient(120% 90% at 50% 50%, transparent 52%, rgba(0,0,0,.6)); }
+  #bars { z-index: 48; }
+  #bars::before, #bars::after { content: ""; position: absolute; left: 0; right: 0; height: var(--bar, 0px); background: #000; }
+  #bars::before { top: 0; } #bars::after { bottom: 0; }
+
+  /* subtítulos cinéticos */
+  #caps { position: absolute; left: 0; right: 0; bottom: 64px; z-index: 47; text-align: center; font-size: 32px; font-weight: 500; letter-spacing: -.015em; }
+  #caps span { display: inline-block; margin: 0 .14em; }
+
+  /* 1 · Logo */
+  .lockup { position: absolute; left: 50%; top: 50%; display: flex; align-items: center; gap: 70px; transform: translate(-50%, -50%); }
+  .lockup svg { width: 300px; height: 300px; overflow: visible; }
+  .lockup .word { font-weight: 600; font-size: 190px; line-height: 1; letter-spacing: -.06em; white-space: nowrap; }
+  .lockup .tag { margin-top: 18px; font-size: 34px; color: var(--text-2); letter-spacing: -.01em; white-space: nowrap; }
+  .flare { position: absolute; width: 900px; height: 6px; margin: -3px 0 0 -450px; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,226,206,.95), rgba(255,139,92,.5) 40%, transparent); filter: blur(2px); mix-blend-mode: screen; pointer-events: none; }
+  .flare::after { content: ""; position: absolute; left: 50%; top: 50%; width: 80px; height: 80px; margin: -40px 0 0 -40px; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,240,230,.9), rgba(255,139,92,.35) 45%, transparent); }
+
+  /* 2 · TRAZA como ventana a la foto */
+  #photo { overflow: hidden; }
+  #photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 38% 40%; transform-origin: 50% 45%; }
+  #photo .scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,7,6,.55) 0%, rgba(8,7,6,0) 30%, rgba(8,7,6,.2) 55%, rgba(8,7,6,.92) 100%), linear-gradient(90deg, rgba(8,7,6,.7) 0%, rgba(8,7,6,0) 60%); }
+  #photo .tint { position: absolute; inset: 0; background: linear-gradient(120deg, rgba(242,119,74,.22), transparent 50%); mix-blend-mode: soft-light; }
+  #win { background: #000; mix-blend-mode: multiply; display: grid; place-items: center; }
+  #win .big { font-family: "Inter Tight", sans-serif; font-weight: 900; font-size: 430px; line-height: .8; letter-spacing: -.045em; color: #fff; white-space: nowrap; }
+  #win .big span { display: inline-block; }
+  #winCap { display: flex; justify-content: space-between; align-items: center; padding: 0 140px; top: auto; bottom: 150px; height: 40px; color: rgba(246,241,236,.8); }
+
+  /* 3 · Hero */
+  #hero .copy { position: absolute; left: 140px; bottom: 190px; width: 1300px; }
+  #hero h1 { font-weight: 600; font-size: 176px; line-height: .98; letter-spacing: -.05em; }
+  #hero p { margin-top: 30px; font-size: 34px; line-height: 1.4; color: rgba(246,241,236,.78); width: 980px; }
+
+  /* 4 · Comunidad */
+  .eyebrow { display: inline-flex; align-items: center; gap: 14px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent-2); }
+  #s4 .head { position: absolute; left: 140px; top: 270px; width: 880px; }
+  .display { font-weight: 600; font-size: 112px; line-height: .95; letter-spacing: -.055em; margin-top: 28px; }
+  #s4 .lead { margin-top: 34px; font-size: 30px; color: var(--text-2); width: 620px; line-height: 1.4; }
+  #phone { position: absolute; left: 1040px; top: 110px; width: 500px; height: 826px; border-radius: 44px; overflow: hidden; background: #0d0b0a; box-shadow: 0 0 0 1px rgba(255,255,255,.12), 0 60px 140px -30px rgba(0,0,0,.9), 0 0 160px -40px rgba(242,119,74,.5); }
+  #phone video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  #phone .shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,7,6,.45), transparent 24%, transparent 48%, rgba(8,7,6,.92)); }
+  #phone .tag { position: absolute; top: 26px; left: 26px; display: inline-flex; gap: 10px; align-items: center; padding: 10px 18px 10px 14px; border-radius: 99px; font-size: 20px; font-weight: 500; }
+  #phone .info { position: absolute; left: 30px; right: 30px; bottom: 32px; }
+  .who { display: flex; align-items: center; gap: 14px; }
+  .who img { width: 58px; height: 58px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px rgba(8,7,6,.6), 0 0 0 4px rgba(242,119,74,.6); }
+  .who b { display: block; font-size: 24px; font-weight: 600; }
+  .who small { font-size: 18px; color: rgba(246,241,236,.66); }
+  #phone .txt { margin: 18px 0; font-size: 25px; line-height: 1.32; font-weight: 500; letter-spacing: -.02em; }
+  .stats-row { display: flex; gap: 22px; font-family: var(--mono); font-size: 20px; color: rgba(246,241,236,.82); align-items: center; }
+  .stats-row svg { width: 22px; height: 22px; vertical-align: -4px; margin-right: 6px; }
+  #heart { display: inline-block; transform-origin: 50% 60%; }
+  .mini { position: absolute; width: 320px; display: grid; grid-template-columns: 110px 1fr; gap: 16px; padding: 14px; border-radius: 26px; }
+  .mini img { width: 110px; height: 110px; border-radius: 16px; object-fit: cover; }
+  .mini b { display: block; font-size: 18px; font-weight: 600; margin: 4px 0 6px; }
+  .mini span { font-size: 17px; line-height: 1.35; color: rgba(242,245,247,.85); display: block; }
+  .mini small { display: block; margin-top: 8px; font-family: var(--mono); font-size: 13px; color: var(--text-3); }
+
+  /* 5 · Recorrido */
+  #track { position: absolute; top: 0; left: 0; height: 1080px; width: 5760px; display: flex; }
+  .panel { position: relative; width: 1920px; height: 1080px; flex: none; }
+  .panel .copy { position: absolute; left: 140px; top: 300px; width: 660px; }
+  .num { font-family: var(--mono); font-size: 22px; color: var(--accent-2); display: flex; gap: 16px; align-items: baseline; }
+  .num i { font-style: normal; color: var(--text-3); letter-spacing: .14em; font-size: 18px; }
+  .panel h2 { margin-top: 30px; font-weight: 600; font-size: 94px; line-height: .96; letter-spacing: -.055em; }
+  .panel h2 em { display: block; font-style: normal; color: var(--text-3); }
+  .panel p { margin-top: 30px; font-size: 28px; line-height: 1.42; color: var(--text-2); }
+  .shot { position: absolute; left: 860px; top: 200px; width: 1000px; border-radius: 26px; overflow: hidden; box-shadow: 0 0 0 1px var(--hair-2), 0 50px 140px -30px rgba(0,0,0,.85), 0 0 140px -40px rgba(242,119,74,.45); }
+  .shot img { display: block; width: 100%; }
+  .chip { position: absolute; padding: 18px 24px; border-radius: 22px; font-size: 22px; font-weight: 500; display: flex; gap: 14px; align-items: center; white-space: nowrap; }
+  .chip .k { font-family: var(--mono); font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); display: block; margin-bottom: 4px; }
+  .chip .ic { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: rgba(242,119,74,.16); color: var(--accent-2); box-shadow: inset 0 0 0 1px rgba(242,119,74,.3); }
+  #reelTop { position: absolute; top: 110px; left: 140px; right: 140px; display: flex; justify-content: space-between; }
+  #reelCount { font-family: var(--mono); font-size: 22px; }
+  #reelCount i { font-style: normal; color: var(--text-3); }
+  #reelBar { position: absolute; left: 140px; right: 140px; bottom: 150px; height: 3px; border-radius: 3px; background: var(--hair-2); overflow: hidden; }
+  #reelBar span { display: block; height: 100%; background: var(--accent-2); transform-origin: left; }
+
+  /* 6 · Esquís */
+  #orb { position: absolute; left: 50%; top: 50%; width: 560px; height: 560px; margin: -320px 0 0 -280px; }
+  #orbLabel { position: absolute; left: 0; right: 0; top: 740px; text-align: center; font-size: 34px; font-weight: 500; letter-spacing: -.02em; }
+  #orbDetail { position: absolute; left: 0; right: 0; top: 800px; text-align: center; font-size: 22px; color: var(--text-3); }
+  #skiCopy { position: absolute; left: 140px; top: 300px; width: 640px; }
+  #skiCopy .display { font-size: 108px; }
+  .skiwrap { position: absolute; left: 860px; width: 1000px; }
+  .skiwrap img { width: 100%; display: block; filter: drop-shadow(0 26px 30px rgba(0,0,0,.55)) drop-shadow(0 3px 4px rgba(0,0,0,.4)); }
+  .skiname { position: absolute; right: 10px; top: -36px; font-family: var(--mono); font-size: 17px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
+  .skiname b { color: var(--text); font-weight: 500; }
+
+  /* 7 · Estaciones */
+  #s7 .head { position: absolute; left: 140px; top: 150px; }
+  .row { position: absolute; left: 0; white-space: nowrap; display: flex; align-items: center; }
+  .row span.n { font-size: 170px; font-weight: 600; letter-spacing: -.055em; line-height: 1.05; transition: none; }
+  .row.fill span.n { color: rgba(242,245,247,.2); }
+  .row.line span.n { color: transparent; -webkit-text-stroke: 1.6px rgba(242,245,247,.32); }
+  .row i { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); margin: 0 60px; box-shadow: 0 0 30px rgba(242,119,74,.7); flex: none; }
+  .row small { font-family: var(--mono); font-size: 22px; color: var(--text-3); margin-left: 22px; align-self: center; }
+
+  /* 8 · Cierre */
+  #cta { position: absolute; left: 50%; top: 760px; transform: translateX(-50%); display: flex; gap: 18px; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 14px; height: 84px; padding: 0 44px; border-radius: 999px; font-size: 30px; font-weight: 500; }
+  .btn-primary { background: linear-gradient(180deg, #ff8f62 0%, #f2703f 100%); color: var(--accent-ink); box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -1px 0 rgba(0,0,0,.12), 0 24px 60px -16px rgba(242,119,74,.8); }
+  .btn-glass { color: var(--text); }
+  #season { position: absolute; left: 0; right: 0; bottom: 90px; text-align: center; }
+</style>
+</head>
+<body>
+<!-- filtros: desenfoque direccional (whip pan) y aberración cromática -->
+<svg width="0" height="0" style="position: absolute">
+  <filter id="camfx" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+    <feGaussianBlur id="fxBlur" in="SourceGraphic" stdDeviation="0 0" result="b" />
+    <feColorMatrix in="b" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="r" />
+    <feOffset id="fxR" in="r" dx="0" dy="0" result="ro" />
+    <feColorMatrix in="b" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g" />
+    <feColorMatrix in="b" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="bl" />
+    <feOffset id="fxB" in="bl" dx="0" dy="0" result="bo" />
+    <feBlend in="ro" in2="g" mode="screen" result="rg" />
+    <feBlend in="rg" in2="bo" mode="screen" />
+  </filter>
+  <filter id="hg" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6" /></filter>
+</svg>
+
+<div id="stage">
+  <div id="cam">
+    <div class="layer" id="glow"></div>
+
+    <div class="layer" id="photo"><img src="../public/media/hero/powder.jpg" alt="" /><div class="tint"></div><div class="scrim"></div></div>
+    <div class="layer" id="win"><p class="big" id="bigWord"><span>T</span><span>R</span><span>A</span><span>Z</span><span>A</span></p></div>
+    <div class="layer mono" id="winCap"><span>Comunidad de esquiadores</span><span>Temporada 26 / 27</span></div>
+
+    <!-- 1 · Logo -->
+    <div class="layer" id="s1">
+      <div class="lockup" id="lock1">
+        <svg viewBox="0 0 64 64" fill="none">
+          <defs>
+            <linearGradient id="lg1" x1="4" y1="50" x2="46" y2="54" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f2f5f7" /><stop offset=".74" stop-color="#f2f5f7" /><stop offset="1" stop-color="#F2774A" /></linearGradient>
+          </defs>
+          <path id="mark1" d="M4 50 L17 35 L24 41 L38 14 C 31 25, 48 29, 40 38 S 30 47, 47 54" stroke="url(#lg1)" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" />
+          <circle id="head1" r="3.4" fill="#ff8b5c" filter="url(#hg)" />
+        </svg>
+        <div><div class="word" id="word1">traza</div><div class="tag" id="tag1">La comunidad de esquiadores</div></div>
+        <div class="flare" id="flare1"></div>
+      </div>
+    </div>
+
+    <!-- 3 · Hero -->
+    <div class="layer" id="hero">
+      <div class="copy"><h1 id="heroTitle"></h1><p id="heroSub">Spots, rutas fuera de pista y clips de cada estación, compartidos por la comunidad.</p></div>
+    </div>
+
+    <!-- 4 · Comunidad -->
+    <div class="layer" id="s4">
+      <div class="head">
+        <p class="mono eyebrow" id="s4eb"><span class="dot" id="s4dot"></span>En directo desde la comunidad</p>
+        <h2 class="display" id="s4title"></h2>
+        <p class="lead" id="s4lead">Clips, fotos, rutas e informes de nieve de quien ha esquiado hoy.</p>
+      </div>
+      <div id="phone">
+        <video id="clip" src="../public/media/users/luca-salto.mp4" muted playsinline preload="auto"></video>
+        <div class="shade"></div>
+        <span class="tag glass"><span class="dot"></span>Clip destacado</span>
+        <div class="info" id="phoneInfo">
+          <div class="who"><img src="../public/media/users/luca-alonso.jpg" alt="" /><div><b>Luca Alonso</b><small>@luca.alonso · Baqueira-Beret · hace 5 h</small></div></div>
+          <p class="txt">Hemos construido un salto en Beret para que lo use todo el que quiera.</p>
+          <div class="stats-row">
+            <span><span id="heart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path id="heartPath" d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg></span><b id="likes">5</b></span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M5 18.5V6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7a2.5 2.5 0 0 1-2.5 2.5H9z" /></svg>3</span>
+          </div>
+        </div>
+      </div>
+      <div class="mini glass" id="miniA"><img src="../public/media/seed/foto-1.jpg" alt="" /><div><b>Marta Gil</b><span>Primeras huellas en Beret después de 40 cm.</span><small>Baqueira-Beret · hace 7 h</small></div></div>
+      <div class="mini glass" id="miniB"><img src="../public/media/seed/foto-3.jpg" alt="" /><div><b>Lucía Torres</b><span>A las 12 la nieve ya estaba transformada en el Veleta.</span><small>Sierra Nevada · hace 15 h</small></div></div>
+    </div>
+
+    <!-- 5 · Recorrido horizontal -->
+    <div class="layer" id="s5">
+      <div id="track">
+        <section class="panel">
+          <div class="copy"><span class="num">01 <i>Mapa</i></span><h2>Cada línea, <em>en el mapa.</em></h2><p>Spots y rutas fuera de pista de cada estación, con dificultad, orientación y desnivel.</p></div>
+          <div class="shot"><img src="../public/media/home/mapa.webp" alt="" /></div>
+          <div class="chip glass" style="left: 1330px; top: 760px"><span class="ic">◆</span><span><span class="k">Comunidad</span>14 spots y rutas</span></div>
+          <div class="chip glass" style="left: 780px; top: 630px"><span class="ic">↗</span><span><span class="k">Ruta · Negra</span>Corredor norte de Baciver</span></div>
+        </section>
+        <section class="panel">
+          <div class="copy"><span class="num">02 <i>Nieve</i></span><h2>La nieve de hoy, <em>de primera mano.</em></h2><p>Informes de quien ha esquiado esta mañana, junto al boletín oficial de aludes.</p></div>
+          <div class="shot"><img src="../public/media/home/estacion.webp" alt="" /></div>
+          <div class="chip glass" style="left: 1360px; top: 750px"><span class="ic">❄</span><span><span class="k">Nieve hoy</span>Polvo · 5,0 / 5</span></div>
+          <div class="chip glass" style="left: 790px; top: 610px"><span class="ic">+</span><span><span class="k">@marta.freeride</span>40 cm nuevos en Beret</span></div>
+        </section>
+        <section class="panel">
+          <div class="copy"><span class="num">03 <i>Rutas</i></span><h2>Antes de ir, <em>mírala por dentro.</em></h2><p>Cada spot con su traza sobre el terreno, sus clips y los spots cercanos.</p></div>
+          <div class="shot"><img src="../public/media/home/spot.webp" alt="" /></div>
+          <div class="chip glass" style="left: 1400px; top: 760px"><span class="ic">▲</span><span><span class="k">Desnivel</span>620 m · Norte</span></div>
+          <div class="chip glass" style="left: 800px; top: 630px"><span class="ic">●</span><span><span class="k">Cerca de aquí</span>Pillow line del bosque · 3,3 km</span></div>
+        </section>
+      </div>
+      <div id="reelTop"><span class="mono">Todo lo que pasa en la montaña</span><span id="reelCount">01 <i>/ 03</i></span></div>
+      <div id="reelBar"><span id="reelFill"></span></div>
+    </div>
+
+    <!-- 6 · Esquís -->
+    <div class="layer" id="s6">
+      <canvas id="orb" width="1120" height="1120"></canvas>
+      <p id="orbLabel"></p>
+      <p id="orbDetail">175 cm · 72 kg · Avanzado · Freeride</p>
+      <div id="skiCopy">
+        <p class="mono">Elige tu esquí · con IA</p>
+        <h2 class="display" id="skiTitle"></h2>
+        <p id="skiLead" style="margin-top: 30px; font-size: 28px; color: var(--text-2); line-height: 1.42; width: 600px">La IA cruza tu físico, tu nivel y tu estilo con lo que puntúan los esquiadores como tú.</p>
+      </div>
+      <div class="skiwrap" id="ski0" style="top: 200px"><span class="skiname">01 · <b>Blizzard Rustler 10</b> · 97 encaje</span><img src="../public/media/skis/blizzard-rustler-10.png" alt="" /></div>
+      <div class="skiwrap" id="ski1" style="top: 465px"><span class="skiname">02 · <b>Salomon QST 106</b> · 95 encaje</span><img src="../public/media/skis/salomon-qst-106.png" alt="" /></div>
+      <div class="skiwrap" id="ski2" style="top: 730px"><span class="skiname">03 · <b>Black Crows Atris</b> · 93 encaje</span><img src="../public/media/skis/black-crows-atris.png" alt="" /></div>
+    </div>
+
+    <!-- 7 · Estaciones -->
+    <div class="layer" id="s7">
+      <div class="head"><p class="mono">Estaciones</p><h2 class="display" id="s7title"></h2></div>
+      <div class="row fill" id="row0" style="top: 520px"></div>
+      <div class="row line" id="row1" style="top: 740px"></div>
+    </div>
+
+    <!-- 8 · Cierre -->
+    <div class="layer" id="s8">
+      <div class="lockup" id="lock8" style="top: 44%">
+        <svg viewBox="0 0 64 64" fill="none">
+          <defs><linearGradient id="lg8" x1="4" y1="50" x2="46" y2="54" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f2f5f7" /><stop offset=".74" stop-color="#f2f5f7" /><stop offset="1" stop-color="#F2774A" /></linearGradient></defs>
+          <path id="mark8" d="M4 50 L17 35 L24 41 L38 14 C 31 25, 48 29, 40 38 S 30 47, 47 54" stroke="url(#lg8)" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" />
+          <circle id="head8" r="3.4" fill="#ff8b5c" filter="url(#hg)" />
+        </svg>
+        <div><div class="word" id="word8">traza</div><div class="tag" id="tag8"></div></div>
+        <div class="flare" id="flare8"></div>
+      </div>
+      <div id="cta">
+        <span class="btn btn-primary" id="ctaA">Únete a Traza <svg width="28" height="28" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
+        <span class="btn btn-glass glass" id="ctaB">Elige tu esquí</span>
+      </div>
+      <p class="mono" id="season">Spots · Rutas · Clips · Nieve · Esquís — Temporada 26 / 27</p>
+    </div>
+  </div>
+
+  <!-- capas de acabado -->
+  <canvas class="layer" id="fx" width="1920" height="1080"></canvas>
+  <div class="layer" id="leak"><i id="lk1"></i><i id="lk2"></i><i id="lk3"></i></div>
+  <div class="layer" id="flash"></div>
+  <svg class="layer" id="swoosh" viewBox="0 0 1920 1080" preserveAspectRatio="none">
+    <defs><linearGradient id="sw" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".0" /><stop offset=".6" stop-color="#ffd9c7" /><stop offset="1" stop-color="#ff7a45" /></linearGradient></defs>
+    <path id="swPath" d="M-120 900 L330 560 L520 700 L930 120 C 760 400, 1220 470, 1010 700 S 760 960, 2060 1040" fill="none" stroke="url(#sw)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+  <div class="layer" id="bars"></div>
+  <div id="caps"></div>
+  <div class="layer" id="vignette"></div>
+  <div class="layer" id="grain"></div>
+  <div class="layer" id="fade" style="background: #000; z-index: 60"></div>
+</div>
+
+<script>
+/* ═════════ Línea de tiempo (segundos). audio/mix.py usa los mismos tiempos. ═════════ */
+const TL = {
+  end: 40.5,
+  vo: { 1: 0.8, 2: 5.1, 3: 7.9, 4: 11.9, 5: 17.0, 6: 21.0, 7: 26.0, 8: 32.9, 9: 36.7 },
+  impacts: [0.35, 4.6, 29.4, 35.3],
+  whips: [11.45, 16.55, 32.35],          // transiciones con barrido lateral
+  slides: [20.35, 23.75],                // pasos del recorrido horizontal
+};
+// palabras de la locución con su inicio relativo (Whisper sobre audio/vo-*.wav)
+const CAPS = {
+  1: [["Cada", 0], ["estación", .24], ["guarda", .7], ["líneas", 1.05], ["que", 1.4], ["solo", 1.64], ["conocen", 1.9], ["quienes", 2.42], ["la", 2.64], ["esquían.", 2.94]],
+  3: [["La", 0], ["comunidad", .2], ["donde", .64], ["los", .98], ["esquiadores", 1.2], ["comparten", 1.82], ["su", 2.44], ["traza.", 2.64]],
+  4: [["Clips,", 0], ["fotos", .58], ["e", .86], ["informes", 1.04], ["de", 1.54], ["nieve,", 1.64], ["de", 2.28], ["quien", 2.38], ["estuvo", 2.58], ["allí", 3.08], ["esta", 3.3], ["misma", 3.52], ["mañana.", 3.74]],
+  5: [["Cada", 0], ["spot", .18], ["y", .5], ["cada", .82], ["ruta", 1.08], ["fuera", 1.44], ["de", 1.7], ["pista,", 1.92], ["en", 2.26], ["el", 2.6], ["mapa.", 2.74]],
+  6: [["Con", 0], ["la", .14], ["nieve", .26], ["de", .56], ["hoy,", .7], ["contada", 1.06], ["de", 1.5], ["primera", 1.66], ["mano.", 1.98]],
+  7: [["Y", 0], ["cuando", .12], ["busques", .3], ["esquís", .74], ["nuevos,", 1.24], ["nuestra", 1.72], ["inteligencia", 1.9], ["artificial", 2.82], ["elige", 3.4], ["los", 3.8], ["tuyos", 3.94], ["entre", 4.4], ["veintisiete", 4.6], ["modelos.", 5.16]],
+  8: [["Desde", 0], ["Baqueira,", .24], ["hasta", .78], ["Chamonix.", 1.22]],
+};
+const CAP_END = { 1: 3.5, 3: 3.25, 4: 4.45, 5: 3.25, 6: 2.5, 7: 5.95, 8: 2.05 };
+const at = (line, word) => TL.vo[line] + CAPS[line][word][1];
+
+/* ───────── utilidades ───────── */
+const $ = (s) => document.querySelector(s);
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const lerp = (a, b, k) => a + (b - a) * k;
+const E = {
+  out: (k) => 1 - Math.pow(1 - k, 4),
+  expo: (k) => (k >= 1 ? 1 : 1 - Math.pow(2, -10 * k)),
+  inExpo: (k) => (k <= 0 ? 0 : Math.pow(2, 10 * k - 10)),
+  io: (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2),
+  ioExpo: (k) => (k <= 0 ? 0 : k >= 1 ? 1 : k < 0.5 ? Math.pow(2, 20 * k - 10) / 2 : (2 - Math.pow(2, -20 * k + 10)) / 2),
+  back: (k) => { const c = 1.7; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2); },
+};
+const win = (t, a, b, fi = 0.5, fo = 0.5) => Math.min(E.out(prog(t, a, a + fi)), 1 - E.io(prog(t, b - fo, b)));
+const set = (el, css) => Object.assign(el.style, css);
+const pulse = (t, t0, dur = 0.5) => (t < t0 ? 0 : Math.exp(-(t - t0) / (dur / 3)) * (t - t0 < dur * 2 ? 1 : 0));
+
+function words(el, lines) {
+  el.innerHTML = lines.map((line) => line.map(([w, acc]) => `<span class="mask"><span class="w ${acc ? "accent" : ""}">${w}</span></span>`).join(" ")).join("<br>");
+  return [...el.querySelectorAll(".w")];
+}
+function rise(ws, t, t0, step = 0.07, dur = 0.9) {
+  ws.forEach((w, i) => {
+    const k = E.expo(prog(t, t0 + i * step, t0 + i * step + dur));
+    w.style.transform = `translateY(${(1 - k) * 115}%) rotate(${(1 - k) * 6}deg) skewX(${(1 - k) * -8}deg)`;
+  });
+}
+// letras que entran con «tracking» y desenfoque, como un preset de After Effects
+function letters(el, text) {
+  el.innerHTML = [...text].map((c) => `<span class="w">${c}</span>`).join("");
+  return [...el.querySelectorAll(".w")];
+}
+function tracking(ls, t, t0, step = 0.05, dur = 0.9, spread = 0.5) {
+  const mid = (ls.length - 1) / 2;
+  ls.forEach((l, i) => {
+    const k = E.expo(prog(t, t0 + Math.abs(i - mid) * step, t0 + Math.abs(i - mid) * step + dur));
+    set(l, { transform: `translateX(${(i - mid) * (1 - k) * spread * 100}px) scale(${1 + (1 - k) * 0.4})`, opacity: k, filter: `blur(${(1 - k) * 18}px)` });
+  });
+}
+function drawPath(path, head, k) {
+  const L = path.getTotalLength();
+  path.style.strokeDasharray = `${L}`;
+  path.style.strokeDashoffset = `${L * (1 - k)}`;
+  const p = path.getPointAtLength(L * k);
+  if (head) { head.setAttribute("cx", p.x); head.setAttribute("cy", p.y); head.style.opacity = k > 0.001 && k < 0.999 ? 1 : 0; }
+  return p;
+}
+function shine(el, t, t0, dur = 1.1) {
+  el.style.backgroundPosition = `${lerp(160, -60, E.io(prog(t, t0, t0 + dur)))}% 0`;
+}
+
+/* ───────── escena ───────── */
+const W1 = letters($("#word1"), "traza");
+const W8 = letters($("#word8"), "traza");
+const heroW = words($("#heroTitle"), [[["Comparte"]], [["tu"], ["traza.", 1]]]);
+heroW[2].classList.add("shine");
+const s4W = words($("#s4title"), [[["Lo"], ["que"], ["se"]], [["está"], ["esquiando"]], [["ahora.", 1]]]);
+s4W[5].classList.add("shine");
+const skiW = words($("#skiTitle"), [[["27"], ["modelos."]], [["Uno"], ["es"], ["el"]], [["tuyo.", 1]]]);
+skiW[5].classList.add("shine");
+const s7W = words($("#s7title"), [[["¿Dónde"], ["esquías"], ["tú?", 1]]]);
+const tagW = words($("#tag8"), [[["Tu"], ["próxima"], ["línea"], ["empieza"], ["aquí."]]]);
+const big = [...document.querySelectorAll("#bigWord span")];
+
+const STATIONS = [["Baqueira-Beret", 2610], ["Chamonix", 3842], ["Sierra Nevada", 3300], ["Grandvalira", 2640], ["Verbier", 3330], ["Cerler", 2630], ["Val Thorens", 3230], ["Formigal", 2250], ["La Molina", 2537], ["Candanchú", 2400]];
+const rowHtml = (list, meta) => list.map(([n, c]) => `<span class="n" data-n="${n}">${n}</span>${meta ? `<small>${c.toLocaleString("es-ES")} m</small>` : ""}<i></i>`).join("");
+$("#row0").innerHTML = rowHtml([...STATIONS, ...STATIONS], true);
+$("#row1").innerHTML = rowHtml([...STATIONS.slice(5), ...STATIONS.slice(0, 5), ...STATIONS.slice(5), ...STATIONS.slice(0, 5)], false);
+
+/* orbe de puntos (mismo algoritmo que el recomendador, controlado por t) */
+const octx = $("#orb").getContext("2d");
+const DOTS = [];
+for (let k = 0; k < 18; k++) {
+  const y = 1 - ((k + 0.5) / 18) * 2, r = Math.sqrt(1 - y * y), m = Math.max(4, Math.round(34 * r));
+  for (let j = 0; j < m; j++) { const a = (j / m) * Math.PI * 2 + k * 0.35; DOTS.push({ x: Math.cos(a) * r, y, z: Math.sin(a) * r, u: (1 - y) / 2, s: (j * 7.13 + k * 3.7) % 6.28 }); }
+}
+function drawOrb(t, k, sweep, vortex, alpha) {
+  octx.setTransform(2, 0, 0, 2, 0, 0);
+  octx.clearRect(0, 0, 560, 560);
+  if (alpha <= 0.001) return;
+  const C = 280, R = 230;
+  const yaw = t * 0.9 + vortex, cy = Math.cos(yaw), sy = Math.sin(yaw), CP = Math.cos(0.35), SP = Math.sin(0.35);
+  const lat = Math.sin(t * 2.2);
+  const pts = [];
+  for (const d of DOTS) {
+    const ki = clamp(k * 1.6 - 0.6 * d.u);
+    if (ki <= 0.001) continue;
+    const eo = E.out(ki);
+    const x1 = d.x * cy + d.z * sy, z1 = -d.x * sy + d.z * cy;
+    const y2 = d.y * CP - z1 * SP, z2 = d.y * SP + z1 * CP;
+    const f = 2.8 / (2.8 - z2), depth = (z2 + 1) / 2;
+    let ox = x1 * R * eo * f, oy = -y2 * R * eo * f;
+    if (vortex > 0) { const sw = (1 - ki) * vortex * 1.5, c = Math.cos(sw), s = Math.sin(sw); [ox, oy] = [ox * c - oy * s, ox * s + oy * c]; }
+    const band = Math.max(0, 1 - ((d.y - lat) ** 2) / 0.02);
+    const g = clamp((sweep * 1.4 - d.u) / 0.4);
+    const a = clamp(0.12 + 0.04 * Math.sin(d.s + t * 1.6) + 0.34 * depth * depth + 0.7 * band * (1 - g) + g * (0.55 + 0.4 * depth)) * eo * alpha;
+    const col = [lerp(242, 255, g), lerp(245, 139, g), lerp(247, 92, g)].map(Math.round);
+    pts.push([depth, C + ox, C + oy, (1.8 * (0.45 + 0.75 * depth) * f + band * 1.2) * (0.4 + 0.6 * eo), `rgba(${col},${a.toFixed(3)})`]);
+  }
+  pts.sort((p, q) => p[0] - q[0]);
+  for (const [, x, y, r, c] of pts) { octx.fillStyle = c; octx.beginPath(); octx.arc(x, y, r, 0, 6.283); octx.fill(); }
+}
+
+/* partículas: nieve y polvo en profundidad, deterministas */
+const fctx = $("#fx").getContext("2d");
+const PARTS = Array.from({ length: 170 }, (_, i) => {
+  const h = (n) => ((Math.sin(i * 127.1 + n * 311.7) * 43758.5453) % 1 + 1) % 1;
+  return { x: h(1) * 1920, y: h(2) * 1080, z: 0.15 + h(3) * 0.85, s: h(4) * 6.28, v: 18 + h(5) * 40 };
+});
+function drawParticles(t, amount, camX) {
+  fctx.clearRect(0, 0, 1920, 1080);
+  if (amount <= 0.01) return;
+  for (const p of PARTS) {
+    const x = ((p.x + Math.sin(t * 0.6 + p.s) * 30 * p.z - camX * p.z * 0.6 + t * 12 * p.z) % 2000 + 2000) % 2000 - 40;
+    const y = ((p.y + t * p.v * p.z) % 1140 + 1140) % 1140 - 30;
+    const r = 0.8 + p.z * p.z * 4.5;
+    const a = (0.25 + 0.5 * (1 - Math.abs(p.z - 0.55))) * amount * (p.z > 0.85 ? 0.35 : 0.6);
+    const g = fctx.createRadialGradient(x, y, 0, x, y, r * (p.z > 0.85 ? 3.2 : 1.6));
+    g.addColorStop(0, `rgba(255,245,238,${a})`); g.addColorStop(1, "rgba(255,245,238,0)");
+    fctx.fillStyle = g; fctx.beginPath(); fctx.arc(x, y, r * (p.z > 0.85 ? 3.2 : 1.6), 0, 6.283); fctx.fill();
+  }
+}
+
+/* subtítulos cinéticos: cada palabra aparece cuando se pronuncia */
+function captions(t) {
+  const el = $("#caps");
+  const line = Object.keys(CAPS).find((n) => t >= TL.vo[n] - 0.1 && t < TL.vo[n] + CAP_END[n] + 0.5);
+  if (!line) { el.innerHTML = ""; return; }
+  const out = 1 - E.io(prog(t, TL.vo[line] + CAP_END[line] + 0.1, TL.vo[line] + CAP_END[line] + 0.5));
+  el.innerHTML = CAPS[line].map(([w, o]) => {
+    const k = E.expo(prog(t, TL.vo[line] + o - 0.05, TL.vo[line] + o + 0.3));
+    const now = t >= TL.vo[line] + o && t < TL.vo[line] + o + 0.35;
+    return `<span style="opacity:${(k * out).toFixed(3)};transform:translateY(${((1 - k) * 14).toFixed(1)}px);filter:blur(${((1 - k) * 6).toFixed(1)}px);color:${now ? "#ffc4ab" : "rgba(246,241,236,.92)"}">${w}</span>`;
+  }).join("");
+}
+
+function render(t) {
+  /* ── cámara virtual: deriva continua, «punch» en los impactos ── */
+  const punch = TL.impacts.reduce((m, i) => Math.max(m, pulse(t, i, 0.45)), 0);
+  const whip = TL.whips.reduce((m, w) => Math.max(m, 1 - Math.abs(t - w) / 0.32), 0);
+  const slide = TL.slides.reduce((m, w) => Math.max(m, 1 - Math.abs(t - w - 0.35) / 0.38), 0);
+  const camX = Math.sin(t * 0.21) * 14, camY = Math.cos(t * 0.17) * 8;
+  set($("#cam"), { transform: `perspective(2400px) rotateY(${Math.sin(t * 0.13) * 1.6}deg) rotateX(${Math.cos(t * 0.11) * 1.1}deg) translate(${camX}px, ${camY}px) scale(${1.02 + punch * 0.035})` });
+  // desenfoque direccional en los barridos y aberración cromática en los golpes
+  const blurX = clamp(whip) * 46 + clamp(slide) * 30;
+  const ca = punch * 9 + clamp(whip) * 6;
+  if (blurX > 0.3 || ca > 0.3) {
+    $("#fxBlur").setAttribute("stdDeviation", `${blurX.toFixed(1)} 0`);
+    $("#fxR").setAttribute("dx", ca.toFixed(1)); $("#fxB").setAttribute("dx", (-ca).toFixed(1));
+    $("#cam").style.filter = "url(#camfx)";
+  } else $("#cam").style.filter = "none";
+
+  /* ── acabado: destello, fugas de luz, barras de cine, trazo ── */
+  $("#flash").style.opacity = Math.max(pulse(t, TL.impacts[0], 0.6) * 0.5, pulse(t, TL.impacts[1], 0.5) * 0.55, pulse(t, TL.impacts[2], 0.5) * 0.35, pulse(t, TL.impacts[3], 0.7) * 0.45);
+  const leakAmt = Math.max(...[4.6, 7.1, 11.45, 16.55, 25.6, 29.4, 32.35, 35.3].map((c) => Math.exp(-(((t - c) / 0.55) ** 2)))) ;
+  [["#lk1", 640, "rgba(255,120,60,.9)", 0], ["#lk2", 520, "rgba(255,190,140,.8)", 2], ["#lk3", 760, "rgba(242,90,40,.7)", 4]].forEach(([s, size, c, o]) => {
+    set($(s), { width: `${size}px`, height: `${size * 0.7}px`, background: c, left: `${((t * 260 + o * 420) % 2600) - 500}px`, top: `${300 + Math.sin(t * 0.7 + o) * 260}px`, opacity: (leakAmt * 0.75 + 0.06).toFixed(3) });
+  });
+  $("#bars").style.setProperty("--bar", `${E.io(prog(t, 4.4, 5.0)) * (1 - E.io(prog(t, 10.9, 11.4))) * 64}px`);
+  // la línea de la traza cruza la pantalla entre escenas
+  const sw = [[11.15, 11.9], [32.05, 32.8]].find(([a, b]) => t >= a && t <= b);
+  if (sw) {
+    const [a, b] = sw, k = prog(t, a, b), L = $("#swPath").getTotalLength();
+    const head = E.io(clamp(k * 1.35)), tail = E.io(clamp(k * 1.35 - 0.35));
+    set($("#swPath"), { strokeDasharray: `${(head - tail) * L} ${L}`, strokeDashoffset: `${-tail * L}`, opacity: 1 });
+  } else $("#swPath").style.opacity = 0;
+  drawParticles(t, Math.max(win(t, 0, 4.6, 1, 0.3) * 0.5, win(t, 7.3, 11.6, 0.4, 0.4) * 0.9, win(t, 29.5, 40.5, 0.6, 0.6) * 0.55), camX * 4);
+  set($("#glow"), { "--gx": `${60 + 14 * Math.sin(t * 0.25)}%`, "--gy": `${18 + 8 * Math.cos(t * 0.31)}%` });
+  captions(t);
+
+  /* ═ 1 · Logo 0 – 4.8 ═ */
+  const o1 = win(t, 0, 4.85, 0.01, 0.3);
+  $("#s1").style.opacity = o1;
+  const p1 = drawPath($("#mark1"), $("#head1"), E.io(prog(t, 0.35, 1.7)));
+  const svg1 = $("#lock1 svg");
+  const drawing = t > 0.35 && t < 1.75;
+  set($("#flare1"), { left: `${svg1.offsetLeft + (p1.x / 64) * 300}px`, top: `${svg1.offsetTop + (p1.y / 64) * 300}px`, opacity: drawing ? 0.9 : Math.max(0, 0.9 - (t - 1.75) * 2) * (t > 1.75 ? 1 : 0), transform: `scaleX(${0.6 + 0.4 * Math.sin(t * 9)})` });
+  tracking(W1, t, 1.3, 0.06, 1.0, 0.55);
+  const tg = E.out(prog(t, 2.1, 2.9));
+  set($("#tag1"), { opacity: tg, letterSpacing: `${lerp(0.25, -0.01, tg)}em`, filter: `blur(${(1 - tg) * 8}px)` });
+  const z1 = E.inExpo(prog(t, 4.0, 4.6));
+  set($("#lock1"), { transform: `translate(-50%, -50%) scale(${(0.94 + 0.08 * E.out(prog(t, 0.2, 4))) * (1 + z1 * 2.2)})`, filter: `blur(${z1 * 22}px)` });
+
+  /* ═ 2 · TRAZA, ventana a la foto 4.6 – 7.7 ═ */
+  const winOn = t >= 4.6 && t < 7.7;
+  $("#win").style.display = winOn ? "grid" : "none";
+  big.forEach((c, i) => {
+    const k = E.expo(prog(t, 4.6 + i * 0.045, 5.3 + i * 0.045));
+    set(c, { transform: `translateY(${(1 - k) * 60}px) scale(${1 + (1 - k) * 0.6})`, opacity: k, filter: `blur(${(1 - k) * 14}px)` });
+  });
+  const zk = E.inExpo(prog(t, 6.55, 7.65));
+  if (tOrigin) $("#win").style.transformOrigin = tOrigin;
+  $("#win").style.transform = `scale(${(1 + prog(t, 4.6, 6.6) * 0.06) * (1 + zk * 70)})`;
+  set($("#winCap"), { opacity: win(t, 5.2, 6.7, 0.5, 0.4), letterSpacing: `${lerp(0.4, 0.14, E.out(prog(t, 5.2, 6.2)))}em` });
+
+  const ph = win(t, 4.6, 11.7, 0.01, 0.4);
+  $("#photo").style.opacity = ph;
+  const phs = 1.34 - 0.22 * E.out(prog(t, 6.7, 8.2)) - 0.07 * prog(t, 8.2, 11.7);
+  set($("#photo img"), { transform: `scale(${phs}) translateX(${-prog(t, 7.6, 11.7) * 30}px)`, filter: `brightness(${0.6 + 0.4 * E.out(prog(t, 6.8, 8))}) contrast(${1.2 - 0.15 * prog(t, 6.8, 8)})` });
+  $("#photo .scrim").style.opacity = E.out(prog(t, 7.3, 8.3));
+  $("#photo .tint").style.opacity = E.out(prog(t, 7.6, 9));
+
+  /* ═ 3 · Hero 7.5 – 11.6 ═ */
+  $("#hero").style.opacity = win(t, 7.5, 11.6, 0.01, 0.2);
+  rise(heroW, t, 7.75, 0.12, 1.0);
+  shine(heroW[2], t, at(3, 7) - 0.1, 1.0);
+  const hs = E.out(prog(t, 8.5, 9.4));
+  set($("#heroSub"), { opacity: hs, transform: `translateY(${(1 - hs) * 20}px)`, filter: `blur(${(1 - hs) * 8}px)` });
+  $("#hero .copy").style.transform = `translateX(${-E.inExpo(prog(t, 11.1, 11.6)) * 700}px)`;
+
+  /* ═ 4 · Comunidad 11.45 – 16.8 ═ */
+  const in4 = E.expo(prog(t, 11.35, 12.1));
+  const out4 = E.inExpo(prog(t, 16.25, 16.6));
+  $("#s4").style.opacity = t >= 11.3 && t < 16.65 ? 1 : 0;
+  $("#s4").style.transform = `translateX(${(1 - in4) * 900 - out4 * 1100}px)`;
+  const eb = E.out(prog(t, 11.6, 12.1));
+  set($("#s4eb"), { opacity: eb, letterSpacing: `${lerp(0.4, 0.14, eb)}em` });
+  $("#s4dot").style.boxShadow = `0 0 0 ${8 * ((t * 1.2) % 1)}px rgba(255,139,92,${0.5 * (1 - ((t * 1.2) % 1))})`;
+  rise(s4W, t, 11.7, 0.06, 1.0);
+  shine(s4W[5], t, 13.0, 1.0);
+  const ld = E.out(prog(t, 12.6, 13.4));
+  set($("#s4lead"), { opacity: ld, transform: `translateY(${(1 - ld) * 18}px)`, filter: `blur(${(1 - ld) * 6}px)` });
+  const pk = E.expo(prog(t, 11.6, 12.9));
+  const inset = 18 * (1 - pk);
+  set($("#phone"), { clipPath: `inset(${inset}% ${inset * 0.7}% ${inset * 0.4}% ${inset * 0.7}% round ${44 + 40 * (1 - pk)}px)`, transform: `perspective(1600px) rotateY(${(1 - pk) * -18 + Math.sin(t * 0.8) * 2}deg) translateY(${(1 - pk) * 80 - prog(t, 12.5, 16.6) * 30}px)` });
+  $("#clip").style.transform = `scale(${1.3 - 0.3 * pk})`;
+  const inf = E.out(prog(t, 12.5, 13.3));
+  set($("#phoneInfo"), { opacity: inf, transform: `translateY(${(1 - inf) * 24}px)` });
+  const liked = t > 15.0;
+  $("#likes").textContent = liked ? "6" : "5";
+  $("#heartPath").setAttribute("fill", liked ? "#ff8b5c" : "none");
+  $("#heart").style.color = liked ? "#ff8b5c" : "";
+  $("#heart").style.transform = `scale(${1 + pulse(t, 15.0, 0.5) * 0.9})`;
+  [["#miniA", at(4, 1) - 0.1, 220], ["#miniB", at(4, 3) - 0.05, 590]].forEach(([s, t0, top], i) => {
+    const k = E.back(prog(t, t0, t0 + 0.8));
+    set($(s), { left: `${1572 + (1 - k) * 200}px`, top: `${top - prog(t, 12, 16.6) * (i ? 60 : 20)}px`, opacity: clamp(k * 1.4), filter: `blur(${clamp(1 - k) * 10}px)` });
+  });
+
+  /* ═ 5 · Recorrido 16.55 – 25.8 ═ */
+  const on5 = t >= 16.3 && t < 25.85;
+  $("#s5").style.opacity = on5 ? 1 - E.io(prog(t, 25.45, 25.8)) : 0;
+  const step = E.ioExpo(prog(t, TL.slides[0], TL.slides[0] + 0.7)) + E.ioExpo(prog(t, TL.slides[1], TL.slides[1] + 0.7));
+  const enter = 1 - E.expo(prog(t, 16.4, 17.2));
+  $("#s5").style.transform = `scale(${1 - E.io(prog(t, 25.4, 25.8)) * 0.08})`;
+  $("#track").style.transform = `translateX(${-step * 1920 + enter * 1100}px)`;
+  const P0 = [16.55, TL.slides[0] + 0.2, TL.slides[1] + 0.2];
+  const chipT = [[at(5, 1), at(5, 4)], [at(6, 2), at(6, 5)], [24.25, 24.5]];
+  document.querySelectorAll(".panel").forEach((p, i) => {
+    const local = t - P0[i];
+    const d = step - i;
+    set(p.querySelector(".shot"), { transform: `perspective(2200px) rotateY(${-14 + 14 * E.out(clamp(local / 1.6))}deg) translateX(${-d * 280}px) scale(${1.05 - 0.05 * clamp(local / 3)})` });
+    p.querySelector(".shot img").style.transform = `scale(1.1) translateX(${-clamp(local / 3.4) * 40}px)`;
+    p.querySelectorAll(".chip").forEach((c, j) => {
+      const t0 = chipT[i][1 - j];
+      const k = E.back(prog(t, t0, t0 + 0.6));
+      set(c, { transform: `translateX(${-d * (420 + j * 160)}px) translateY(${(1 - k) * 40}px) scale(${0.8 + 0.2 * k})`, opacity: clamp(k * 1.3) });
+    });
+    p.querySelector(".copy").style.transform = `translateX(${-d * 160}px)`;
+    p.querySelectorAll(".copy > *").forEach((c, j) => { const k = E.expo(prog(t, P0[i] + 0.15 + j * 0.1, P0[i] + 1 + j * 0.1)); set(c, { opacity: k, transform: `translateY(${(1 - k) * 40}px)`, filter: `blur(${(1 - k) * 8}px)` }); });
+  });
+  $("#reelFill").style.transform = `scaleX(${(1 + step) / 3})`;
+  $("#reelCount").innerHTML = `${String(Math.round(step) + 1).padStart(2, "0")} <i>/ 03</i>`;
+
+  /* ═ 6 · Esquís 25.6 – 32.6 ═ */
+  const on6 = t >= 25.55 && t < 32.7;
+  $("#s6").style.opacity = on6 ? 1 : 0;
+  $("#s6").style.transform = `translateX(${-E.inExpo(prog(t, 32.15, 32.55)) * 1100}px)`;
+  const tSweep = at(7, 7) - 0.1, tSkis = TL.impacts[2];
+  const ok = E.out(prog(t, 25.7, 26.9));
+  drawOrb(t, ok * (1 - E.io(prog(t, tSkis - 0.35, tSkis + 0.05))), E.io(prog(t, tSweep, tSweep + 0.5)), E.inExpo(prog(t, tSkis - 0.35, tSkis + 0.05)) * 1.8, 1 - prog(t, tSkis, tSkis + 0.15));
+  $("#orb").style.transform = `scale(${0.9 + 0.1 * ok + pulse(t, tSkis - 0.4, 0.3) * 0.06})`;
+  const labels = ["Leyendo tu perfil", "Comparando 27 modelos", "Preguntando a la comunidad", "Listo"];
+  const li = t < 27.0 ? 0 : t < 27.9 ? 1 : t < tSweep ? 2 : 3;
+  $("#orbLabel").textContent = labels[li];
+  $("#orbLabel").style.color = li === 3 ? "var(--accent-2)" : "var(--text)";
+  const lab = win(t, 26.2, tSkis, 0.4, 0.25);
+  $("#orbLabel").style.opacity = lab; $("#orbDetail").style.opacity = lab * 0.9;
+  $("#skiCopy").style.opacity = t > tSkis ? 1 : 0;
+  rise(skiW, t, at(7, 12) - 0.12, 0.07, 1.0);
+  shine(skiW[5], t, at(7, 13) + 0.6, 1.0);
+  const sl = E.out(prog(t, 31.0, 31.7));
+  set($("#skiLead"), { opacity: sl, filter: `blur(${(1 - sl) * 6}px)` });
+  [0, 1, 2].forEach((i) => {
+    const k = E.expo(prog(t, tSkis + i * 0.13, tSkis + 1.1 + i * 0.13));
+    const drift = prog(t, tSkis, 32.6) * (14 + i * 9);
+    set($(`#ski${i}`), { transform: `translateX(${(1 - k) * 900 - drift}px) rotate(${(1 - k) * -7}deg) scale(${1 + (1 - k) * 0.15})`, opacity: k, filter: `blur(${(1 - k) * 14}px)` });
+  });
+
+  /* ═ 7 · Estaciones 32.35 – 35.4 ═ */
+  const on7 = t >= 32.2 && t < 35.45;
+  $("#s7").style.opacity = on7 ? 1 - E.io(prog(t, 35.1, 35.4)) : 0;
+  $("#s7").style.transform = `translateX(${(1 - E.expo(prog(t, 32.2, 32.9))) * 900}px) scale(${1 + E.inExpo(prog(t, 34.9, 35.4)) * 0.2})`;
+  rise(s7W, t, 32.5, 0.08, 1.0);
+  const mv = (t - 32.2) * 300;
+  $("#row0").style.transform = `translateX(${-80 - mv}px)`;
+  $("#row1").style.transform = `translateX(${-1900 + mv}px)`;
+  const hot = t >= at(8, 1) - 0.1 && t < at(8, 3) - 0.1 ? "Baqueira-Beret" : t >= at(8, 3) - 0.1 ? "Chamonix" : null;
+  document.querySelectorAll(".row .n").forEach((n) => {
+    const isHot = n.dataset.n === hot;
+    n.style.color = isHot ? "#ff8b5c" : "";
+    n.style.webkitTextStroke = isHot && n.closest(".line") ? "1.6px #ff8b5c" : "";
+    n.style.textShadow = isHot ? "0 0 60px rgba(255,139,92,.45)" : "";
+  });
+
+  /* ═ 8 · Cierre 35.3 – 40.5 ═ */
+  $("#s8").style.opacity = t >= 35.3 ? 1 : 0;
+  const p8 = drawPath($("#mark8"), $("#head8"), E.io(prog(t, 35.4, 36.6)));
+  const svg8 = $("#lock8 svg");
+  const drawing8 = t > 35.4 && t < 36.6;
+  set($("#flare8"), { left: `${svg8.offsetLeft + (p8.x / 64) * 300}px`, top: `${svg8.offsetTop + (p8.y / 64) * 300}px`, opacity: drawing8 ? 0.9 : 0, transform: `scaleX(${0.6 + 0.4 * Math.sin(t * 9)})` });
+  tracking(W8, t, TL.vo[9] - 0.15, 0.05, 0.9, 0.55);
+  tagW.forEach((w, i) => {
+    const t0 = TL.vo[9] + [0.56, 0.66, 1.02, 1.4, 1.86][i] - 0.08;
+    const k = E.expo(prog(t, t0, t0 + 0.6));
+    w.style.transform = `translateY(${(1 - k) * 110}%)`;
+  });
+  [["#ctaA", 38.75], ["#ctaB", 38.9]].forEach(([s, t0]) => { const k = E.back(prog(t, t0, t0 + 0.7)); set($(s), { opacity: clamp(k), transform: `translateY(${(1 - k) * 30}px) scale(${0.9 + 0.1 * k})` }); });
+  $("#season").style.opacity = E.out(prog(t, 39.2, 39.8)) * 0.9;
+  $("#lock8").style.transform = `translate(-50%, -50%) scale(${0.95 + 0.05 * E.out(prog(t, 35.3, 40.5))})`;
+
+  $("#fade").style.opacity = Math.max(1 - prog(t, 0, 0.3), prog(t, TL.end - 0.7, TL.end));
+}
+
+async function seekVideo(t) {
+  const v = $("#clip");
+  const target = clamp(t - 11.45 + 1.0, 0, v.duration - 0.05);
+  if (Math.abs(v.currentTime - target) < 0.001) return;
+  await new Promise((res) => { v.addEventListener("seeked", res, { once: true }); v.currentTime = target; });
+}
+
+let tOrigin = null;
+window.ready = (async () => {
+  await document.fonts.ready;
+  await Promise.all([...document.images].map((i) => (i.complete ? null : new Promise((r) => (i.onload = i.onerror = r)))));
+  const v = $("#clip");
+  if (v.readyState < 2) await new Promise((r) => v.addEventListener("loadeddata", r, { once: true }));
+  const r = big[0].getBoundingClientRect();
+  tOrigin = `${r.left + r.width * 0.5}px ${r.top + r.height * 0.62}px`;
+  render(0);
+  return { duration: TL.end };
+})();
+window.frame = async (t) => { render(t); await seekVideo(t); };
+
+/* vista previa: ?t=12 congela en ese segundo; sin parámetros se reproduce */
+const qp = new URLSearchParams(location.search);
+if (!navigator.webdriver) window.ready.then(() => {
+  if (qp.has("t")) return window.frame(+qp.get("t"));
+  const t0 = performance.now(), v = $("#clip");
+  const loop = () => { const t = ((performance.now() - t0) / 1000) % TL.end; render(t); const vt = t - 11.45 + 1; if (vt > 0 && vt < 9.9) { if (v.paused) { v.currentTime = vt; v.play(); } } else v.pause(); requestAnimationFrame(loop); };
+  loop();
+});
+</script>
+</body>
+</html>
